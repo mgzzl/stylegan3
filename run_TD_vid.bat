@@ -1,0 +1,1 @@
+python TD_listener_vid.py --network=C:\Users\hello\Desktop\AI\lucid-sonic-dreams\pytorch\70s-scifi-1024.pkl

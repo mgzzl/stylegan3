@@ -1,0 +1,1 @@
+python TD_listener_img.py --network=C:\Users\hello\Desktop\AI\lucid-sonic-dreams\pytorch\VisionaryArt-1024.pkl --outdir=./out/VisionaryArt-1024
