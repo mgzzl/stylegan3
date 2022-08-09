@@ -1,0 +1,1 @@
+python gen_images.py --network=../70s-scifi-1024.pkl --outdir=./out/70s-scifi-1024 --seeds=1-2
