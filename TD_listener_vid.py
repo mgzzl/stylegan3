@@ -48,19 +48,16 @@ def layout_grid(img, grid_w=None, grid_h=1, float_to_uint8=True, chw_to_hwc=True
 
 #----------------------------------------------------------------------------
 
-def gen_interp_video(G, mp4: str, seeds, shuffle_seed=None, w_frames=60*4, kind='cubic', grid_dims=(1,1), num_keyframes=None, wraps=2, psi=1, device=torch.device('cuda'), **video_kwargs):
+def gen_interp_video(G, mp4: str, num_seeds:int, spout, shuffle_seed=None, w_frames=60*4, kind='cubic', grid_dims=(1,1), num_keyframes=None, wraps=2, psi=1, device=torch.device('cuda'), **video_kwargs):
     grid_w = grid_dims[0]
     grid_h = grid_dims[1]
-    # # create spout object
-    spout = Spout(silent = True, width=1024, height=1024)
-    # # create receiver
-    spout.createReceiver('input')
     # # create sender
     spout.createSender('output')
-    # seeds = random.sample(range(0,9999999), len(seeds))
-    seeds = random.sample(range(0,9999999), 2000)
+    seeds = random.sample(range(0,9999999), int(num_seeds))
+    START_SEED=420
+    # seeds = random.sample(range(0,9999999), 2)
     while True:
-        # seeds[1] = random.randint(0,999999)
+        seeds[0] = START_SEED
         if num_keyframes is None:
             if len(seeds) % (grid_w*grid_h) != 0:
                 raise ValueError('Number of input seeds must be divisible by grid W*H')
@@ -91,7 +88,7 @@ def gen_interp_video(G, mp4: str, seeds, shuffle_seed=None, w_frames=60*4, kind=
             grid.append(row)
 
         # Render video.
-        video_out = imageio.get_writer(mp4, mode='I', fps=60, codec='libx264', **video_kwargs)
+        # video_out = imageio.get_writer(mp4, mode='I', fps=60, codec='libx264', **video_kwargs)
         for frame_idx in tqdm(range(num_keyframes * w_frames)):
             imgs = []
             for yi in range(grid_h):
@@ -101,12 +98,8 @@ def gen_interp_video(G, mp4: str, seeds, shuffle_seed=None, w_frames=60*4, kind=
                     img = G.synthesis(ws=w.unsqueeze(0), noise_mode='const')[0]            
                     imgs.append(img)
             spout.send(layout_grid(torch.stack(imgs), grid_w=grid_w, grid_h=grid_h))
-        # spout.check()
-
-        # seeds[1] = random.randint(0,999999)
-        # end_seed = random.randint(0,999999)
-        # video_out.append_data(layout_grid(torch.stack(imgs), grid_w=grid_w, grid_h=grid_h))
-    # video_out.close()
+        seeds = random.sample(range(0,9999999), int(num_seeds))
+        spout.check()
 
 #----------------------------------------------------------------------------
 
@@ -145,7 +138,7 @@ def parse_tuple(s: Union[str, Tuple[int,int]]) -> Tuple[int, int]:
 
 @click.command()
 @click.option('--network', 'network_pkl', help='Network pickle filename', required=True)
-@click.option('--seeds', type=parse_range, help='List of random seeds', default='1,100', required=True)
+@click.option('--num_seeds', help='NuFmber of random seeds to generate', default='200', required=True)
 @click.option('--shuffle-seed', type=int, help='Random seed to use for shuffling seed order', default=None)
 @click.option('--grid', type=parse_tuple, help='Grid width/height, e.g. \'4x3\' (default: 1x1)', default=(1,1))
 @click.option('--num-keyframes', type=int, help='Number of seeds to interpolate through.  If not specified, determine based on the length of the seeds array given by --seeds.', default=None)
@@ -154,7 +147,7 @@ def parse_tuple(s: Union[str, Tuple[int,int]]) -> Tuple[int, int]:
 @click.option('--output', help='Output .mp4 filename', type=str, default='./video.mp4', metavar='FILE')
 def generate_images(
     network_pkl: str,
-    seeds: List[int],
+    num_seeds: int,
     shuffle_seed: Optional[int],
     truncation_psi: float,
     grid: Tuple[int,int],
@@ -183,13 +176,17 @@ def generate_images(
     --seeds must be divisible by grid size W*H (--grid).  In this case the
     output video length will be '# seeds/(w*h)*w_frames' frames.
     """
-
     print('Loading networks from "%s"...' % network_pkl)
     device = torch.device('cuda')
     with dnnlib.util.open_url(network_pkl) as f:
         G = legacy.load_network_pkl(f)['G_ema'].to(device) # type: ignore
 
-    gen_interp_video(G=G, mp4=output, bitrate='12M', grid_dims=grid, num_keyframes=num_keyframes, w_frames=w_frames, seeds=seeds, shuffle_seed=shuffle_seed, psi=truncation_psi)
+    # # create spout object
+    spout = Spout(silent = True, width=1024, height=1024)
+    # # create receiver
+    spout.createReceiver('input_try')
+    
+    gen_interp_video(G=G, mp4=output, bitrate='12M', grid_dims=grid, spout=spout,num_keyframes=num_keyframes, w_frames=w_frames, num_seeds=num_seeds, shuffle_seed=shuffle_seed, psi=truncation_psi)
 
 #----------------------------------------------------------------------------
 
