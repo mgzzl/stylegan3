@@ -1,4 +1,4 @@
-name: stylegan3-nvidia
+name: stylegan3
 channels:
   - pytorch
   - nvidia
@@ -10,7 +10,7 @@ dependencies:
   - pillow=8.3.1
   - scipy=1.7.1
   - pytorch=1.9.1
-  - cudatoolkit
+  - cudatoolkit=11.6
   - requests=2.26.0
   - tqdm=4.62.2
   - ninja=1.10.2
@@ -22,3 +22,4 @@ dependencies:
     - pyopengl==3.1.5
     - imageio-ffmpeg==0.4.3
     - pyspng
+    - pygame
