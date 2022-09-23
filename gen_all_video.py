@@ -145,16 +145,17 @@ If --num-keyframes is not specified, the number of seeds given with
 output video length will be '# seeds/(w*h)*w_frames' frames.
 """
 import random
-pklPath='C:/Users/hello/Desktop/AI/lucid-sonic-dreams/pytorch/'
+pklPath='C:/Users/hello/Desktop/AI/stylegan3/pretrainedNVIDIA/'
 outDir='C:/Users/hello/Desktop/AI/stylegan3/out/'
-seeds= random.sample(range(0, 999999999), 240)
-print(seed for seed in seeds)
+seeds= random.sample(range(0, 999999999), 35)
+# print(seed for seed in seeds)
 class_idx=0
 truncation_psi=1
 grid = (1,1)
 num_keyframes = None
-w_frames = 900
-shuffle_seed = 20
+w_frames = 155
+# shuffle_seed = 20
+shuffle_seed = None
 truncation_psi = 1
 noise_mode='const'
 translate = (0,0)
